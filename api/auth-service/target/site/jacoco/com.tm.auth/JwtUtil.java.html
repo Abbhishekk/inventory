@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auth-service</a> &gt; <a href="index.source.html" class="el_package">com.tm.auth</a> &gt; <span class="el_source">JwtUtil.java</span></div><h1>JwtUtil.java</h1><pre class="source lang-java linenums">package com.tm.auth;
+
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.stereotype.Component;
+import java.security.Key;
+import java.util.Date;
+
+@Component
+<span class="fc" id="L10">public class JwtUtil {</span>
+    
+<span class="fc" id="L12">    private final String SECRET = &quot;mySecretKeyForJWTTokenGenerationThatIsLongEnoughForHS256Algorithm&quot;;</span>
+<span class="fc" id="L13">    private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());</span>
+<span class="fc" id="L14">    private final long ACCESS_TOKEN_VALIDITY = 15 * 60 * 1000; // 15 minutes</span>
+<span class="fc" id="L15">    private final long REFRESH_TOKEN_VALIDITY = 7 * 24 * 60 * 60 * 1000; // 7 days</span>
+    
+    public String generateAccessToken(String username) {
+<span class="fc" id="L18">        return Jwts.builder()</span>
+<span class="fc" id="L19">                .setSubject(username)</span>
+<span class="fc" id="L20">                .setIssuedAt(new Date())</span>
+<span class="fc" id="L21">                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_VALIDITY))</span>
+<span class="fc" id="L22">                .claim(&quot;type&quot;, &quot;access&quot;)</span>
+<span class="fc" id="L23">                .signWith(key, SignatureAlgorithm.HS256)</span>
+<span class="fc" id="L24">                .compact();</span>
+    }
+    
+    public String generateRefreshToken(String username) {
+<span class="fc" id="L28">        return Jwts.builder()</span>
+<span class="fc" id="L29">                .setSubject(username)</span>
+<span class="fc" id="L30">                .setIssuedAt(new Date())</span>
+<span class="fc" id="L31">                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_VALIDITY))</span>
+<span class="fc" id="L32">                .claim(&quot;type&quot;, &quot;refresh&quot;)</span>
+<span class="fc" id="L33">                .signWith(key, SignatureAlgorithm.HS256)</span>
+<span class="fc" id="L34">                .compact();</span>
+    }
+    
+    public String getUsernameFromToken(String token) {
+<span class="fc" id="L38">        return Jwts.parserBuilder()</span>
+<span class="fc" id="L39">                .setSigningKey(key)</span>
+<span class="fc" id="L40">                .build()</span>
+<span class="fc" id="L41">                .parseClaimsJws(token)</span>
+<span class="fc" id="L42">                .getBody()</span>
+<span class="fc" id="L43">                .getSubject();</span>
+    }
+    
+    public boolean validateToken(String token) {
+        try {
+<span class="fc" id="L48">            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);</span>
+<span class="fc" id="L49">            return true;</span>
+<span class="fc" id="L50">        } catch (JwtException | IllegalArgumentException e) {</span>
+<span class="fc" id="L51">            return false;</span>
+        }
+    }
+    
+    public boolean isTokenExpired(String token) {
+        try {
+<span class="fc" id="L57">            Date expiration = Jwts.parserBuilder()</span>
+<span class="fc" id="L58">                    .setSigningKey(key)</span>
+<span class="fc" id="L59">                    .build()</span>
+<span class="fc" id="L60">                    .parseClaimsJws(token)</span>
+<span class="fc" id="L61">                    .getBody()</span>
+<span class="fc" id="L62">                    .getExpiration();</span>
+<span class="fc" id="L63">            return expiration.before(new Date());</span>
+<span class="nc" id="L64">        } catch (JwtException | IllegalArgumentException e) {</span>
+<span class="nc" id="L65">            return true;</span>
+        }
+    }
+    
+    public String getTokenType(String token) {
+        try {
+<span class="fc" id="L71">            return Jwts.parserBuilder()</span>
+<span class="fc" id="L72">                    .setSigningKey(key)</span>
+<span class="fc" id="L73">                    .build()</span>
+<span class="fc" id="L74">                    .parseClaimsJws(token)</span>
+<span class="fc" id="L75">                    .getBody()</span>
+<span class="fc" id="L76">                    .get(&quot;type&quot;, String.class);</span>
+<span class="nc" id="L77">        } catch (JwtException | IllegalArgumentException e) {</span>
+<span class="nc" id="L78">            return null;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

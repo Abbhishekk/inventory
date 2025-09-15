@@ -19,11 +19,12 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
 
-    private UserInfoService service;
 
-    private JwtService jwtService;
+    private final UserInfoService service;
 
-    private AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+
+    private final AuthenticationManager authenticationManager;
 
     @GetMapping("/welcome")
     public String welcome() {

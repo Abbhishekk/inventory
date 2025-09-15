@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auth-service</a> &gt; <a href="index.source.html" class="el_package">com.tm.auth</a> &gt; <span class="el_source">AuthService.java</span></div><h1>AuthService.java</h1><pre class="source lang-java linenums">package com.tm.auth;
+
+import com.tm.auth.exception.AuthException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Service
+<span class="fc" id="L10">public class AuthService {</span>
+    
+    @Autowired
+    private JwtUtil jwtUtil;
+    
+    @Autowired
+    private UserServiceClient userServiceClient;
+    
+<span class="fc" id="L18">    private final Set&lt;String&gt; blacklistedTokens = ConcurrentHashMap.newKeySet();</span>
+    
+    public AuthResponse authenticate(LoginRequest request) {
+<span class="fc bfc" id="L21" title="All 6 branches covered.">        if (request == null || request.getUsername() == null || request.getPassword() == null ||</span>
+<span class="fc bfc" id="L22" title="All 4 branches covered.">            request.getUsername().trim().isEmpty() || request.getPassword().trim().isEmpty()) {</span>
+<span class="fc" id="L23">            throw new AuthException(&quot;Username and password are required&quot;);</span>
+        }
+        
+        // Validate against user service
+<span class="fc" id="L27">        UserServiceClient.ValidateUserRequest validateRequest = new UserServiceClient.ValidateUserRequest(request.getUsername(), request.getPassword());</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (!Boolean.TRUE.equals(userServiceClient.validateUser(validateRequest))) {</span>
+<span class="fc" id="L29">            throw new AuthException(&quot;Invalid credentials&quot;);</span>
+        }
+        
+<span class="fc" id="L32">        String accessToken = jwtUtil.generateAccessToken(request.getUsername());</span>
+<span class="fc" id="L33">        String refreshToken = jwtUtil.generateRefreshToken(request.getUsername());</span>
+        
+<span class="fc" id="L35">        return new AuthResponse(accessToken, refreshToken, request.getUsername());</span>
+    }
+    
+    public boolean validateToken(String token) {
+<span class="fc bfc" id="L39" title="All 8 branches covered.">        return token != null &amp;&amp; !blacklistedTokens.contains(token) &amp;&amp; jwtUtil.validateToken(token) &amp;&amp; !jwtUtil.isTokenExpired(token);</span>
+    }
+    
+    public String getUsernameFromToken(String token) {
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (!validateToken(token)) {</span>
+<span class="fc" id="L44">            throw new AuthException(&quot;Invalid or expired token&quot;);</span>
+        }
+<span class="fc" id="L46">        return jwtUtil.getUsernameFromToken(token);</span>
+    }
+    
+    public AuthResponse refreshToken(RefreshTokenRequest request) {
+<span class="fc" id="L50">        String refreshToken = request.getRefreshToken();</span>
+        
+<span class="fc bfc" id="L52" title="All 4 branches covered.">        if (!jwtUtil.validateToken(refreshToken) || jwtUtil.isTokenExpired(refreshToken)) {</span>
+<span class="fc" id="L53">            throw new AuthException(&quot;Invalid or expired refresh token&quot;);</span>
+        }
+        
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (!&quot;refresh&quot;.equals(jwtUtil.getTokenType(refreshToken))) {</span>
+<span class="fc" id="L57">            throw new AuthException(&quot;Invalid token type&quot;);</span>
+        }
+        
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (blacklistedTokens.contains(refreshToken)) {</span>
+<span class="fc" id="L61">            throw new AuthException(&quot;Refresh token has been revoked&quot;);</span>
+        }
+        
+<span class="fc" id="L64">        String username = jwtUtil.getUsernameFromToken(refreshToken);</span>
+<span class="fc" id="L65">        String newAccessToken = jwtUtil.generateAccessToken(username);</span>
+<span class="fc" id="L66">        String newRefreshToken = jwtUtil.generateRefreshToken(username);</span>
+        
+        // Blacklist old refresh token
+<span class="fc" id="L69">        blacklistedTokens.add(refreshToken);</span>
+        
+<span class="fc" id="L71">        return new AuthResponse(newAccessToken, newRefreshToken, username);</span>
+    }
+    
+    public void invalidateToken(String token) {
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (token != null) {</span>
+<span class="fc" id="L76">            blacklistedTokens.add(token);</span>
+        }
+<span class="fc" id="L78">    }</span>
+    
+    public void clearAllTokens() {
+<span class="fc" id="L81">        blacklistedTokens.clear();</span>
+<span class="fc" id="L82">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

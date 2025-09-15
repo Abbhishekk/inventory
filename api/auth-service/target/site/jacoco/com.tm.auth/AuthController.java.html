@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auth-service</a> &gt; <a href="index.source.html" class="el_package">com.tm.auth</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">package com.tm.auth;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.Map;
+import java.util.HashMap;
+
+@RestController
+@RequestMapping(&quot;/auth&quot;)
+@Tag(name = &quot;Authentication&quot;, description = &quot;Authentication and authorization operations&quot;)
+<span class="fc" id="L16">public class AuthController {</span>
+    
+    @Autowired
+    private AuthService authService;
+    
+    @PostMapping(&quot;/login&quot;)
+    @Operation(summary = &quot;User login&quot;, description = &quot;Authenticate user and return JWT token&quot;)
+    public ResponseEntity&lt;AuthResponse&gt; login(@RequestBody LoginRequest request) {
+<span class="fc" id="L24">        AuthResponse response = authService.authenticate(request);</span>
+<span class="fc" id="L25">        return ResponseEntity.ok(response);</span>
+    }
+    
+    @PostMapping(&quot;/refresh&quot;)
+    @Operation(summary = &quot;Refresh token&quot;, description = &quot;Refresh JWT token using refresh token&quot;)
+    public ResponseEntity&lt;AuthResponse&gt; refreshToken(@RequestBody RefreshTokenRequest request) {
+<span class="fc" id="L31">        AuthResponse response = authService.refreshToken(request);</span>
+<span class="fc" id="L32">        return ResponseEntity.ok(response);</span>
+    }
+    
+    @PostMapping(&quot;/validate&quot;)
+    @Operation(summary = &quot;Validate token&quot;, description = &quot;Validate JWT token and return user info&quot;)
+    public ResponseEntity&lt;?&gt; validateToken(@RequestParam(required = false) String token, 
+                                         @RequestHeader(value = &quot;Authorization&quot;, required = false) String authHeader) {
+<span class="fc" id="L39">        String actualToken = extractToken(token, authHeader);</span>
+<span class="fc" id="L40">        boolean isValid = authService.validateToken(actualToken);</span>
+<span class="fc" id="L41">        Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L42">        response.put(&quot;valid&quot;, isValid);</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (isValid) {</span>
+<span class="fc" id="L44">            response.put(&quot;username&quot;, authService.getUsernameFromToken(actualToken));</span>
+        }
+<span class="fc" id="L46">        return ResponseEntity.ok(response);</span>
+    }
+    
+    @PostMapping(&quot;/logout&quot;)
+    @Operation(summary = &quot;User logout&quot;, description = &quot;Logout user and blacklist JWT token&quot;)
+    @SecurityRequirement(name = &quot;Bearer Authentication&quot;)
+    public ResponseEntity&lt;?&gt; logout(@RequestParam(required = false) String token,
+                                  @RequestHeader(value = &quot;Authorization&quot;, required = false) String authHeader) {
+<span class="fc" id="L54">        String actualToken = extractToken(token, authHeader);</span>
+<span class="fc" id="L55">        authService.invalidateToken(actualToken);</span>
+<span class="fc" id="L56">        Map&lt;String, String&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L57">        response.put(&quot;message&quot;, &quot;Logged out successfully&quot;);</span>
+<span class="fc" id="L58">        return ResponseEntity.ok(response);</span>
+    }
+    
+    @PostMapping(&quot;/cleanup&quot;)
+    @Operation(summary = &quot;Cleanup tokens&quot;, description = &quot;Clear all blacklisted tokens (admin operation)&quot;)
+    public ResponseEntity&lt;?&gt; cleanup() {
+<span class="fc" id="L64">        authService.clearAllTokens();</span>
+<span class="fc" id="L65">        Map&lt;String, String&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L66">        response.put(&quot;message&quot;, &quot;All tokens cleared&quot;);</span>
+<span class="fc" id="L67">        return ResponseEntity.ok(response);</span>
+    }
+    
+    private String extractToken(String token, String authHeader) {
+<span class="fc bfc" id="L71" title="All 4 branches covered.">        if (authHeader != null &amp;&amp; authHeader.startsWith(&quot;Bearer &quot;)) {</span>
+<span class="fc" id="L72">            return authHeader.substring(7);</span>
+        }
+<span class="fc" id="L74">        return token;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
