@@ -1,6 +1,7 @@
 package com.inventoryManagement.product_service.controller;
 
 
+import com.inventoryManagement.product_service.dto.ProductOnlyResponse;
 import com.inventoryManagement.product_service.dto.ProductRequest;
 import com.inventoryManagement.product_service.dto.ProductResponse;
 import com.inventoryManagement.product_service.model.Product;
@@ -32,7 +33,10 @@ public class ProductController {
                 .map(ResponseEntity::ok) // If Optional has a value, return it with 200 OK
                 .orElse(ResponseEntity.notFound().build()); // If Optional is empty, return 404 Not Found
     }
-
+    @GetMapping("/low-stock")
+    public ResponseEntity<List<ProductOnlyResponse>> getLowStockProducts() {
+        return ResponseEntity.ok(productService.getLowStockProducts());
+    }
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<ProductResponse> getAllProducts(){
