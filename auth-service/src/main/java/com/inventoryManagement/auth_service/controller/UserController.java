@@ -30,6 +30,11 @@ public class UserController {
     public String welcome() {
         return "Welcome this endpoint is not secure";
     }
+    @GetMapping("/user")
+    public String user(){
+
+        return "This is authenticated";
+    }
 
     @PostMapping("/addNewUser")
     public String addNewUser(@RequestBody UserInfo userInfo) {
@@ -44,7 +49,7 @@ public class UserController {
                 new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
         );
         if (authentication.isAuthenticated()) {
-            return jwtService.generateToken(authRequest.getUsername());
+            return jwtService.generateAccessToken(authRequest.getUsername());
         } else {
             throw new UsernameNotFoundException("Invalid user request!");
         }

@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/auth/welcome", "/auth/addNewUser", "/auth/generateToken").permitAll()
-
+                        .requestMatchers("/auth/user").hasAuthority("ADMIN")
                         // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
