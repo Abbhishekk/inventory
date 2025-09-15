@@ -14,6 +14,10 @@ spring:
               uri: lb://CATEGORY-SERVICE
               predicates:
                 - Path=/api/category/**
+            - id: auth-service
+              uri: lb://auth-service
+              predicates:
+                - Path=/auth/**
             - id: product-service
               uri: lb://PRODUCT-SERVICE
               predicates:
@@ -41,3 +45,5 @@ management:
   endpoint:
     gateway:
       access: unrestricted
+jwt:
+  secret: "5367566859703373367639792F423F452848284D6251655468576D5A71347437"
