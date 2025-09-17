@@ -4,7 +4,6 @@ import com.inventoryManagement.category_service.dto.CategoryRequest;
 import com.inventoryManagement.category_service.dto.CategoryResponse;
 import com.inventoryManagement.category_service.service.CategoryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;

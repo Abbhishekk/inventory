@@ -10,8 +10,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -44,14 +46,18 @@ public class UserController {
     // Removed the role checks here as they are already managed in SecurityConfig
 
     @PostMapping("/generateToken")
-    public String authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
-        );
-        if (authentication.isAuthenticated()) {
-            return jwtService.generateAccessToken(authRequest.getUsername());
-        } else {
-            throw new UsernameNotFoundException("Invalid user request!");
+    public ResponseEntity<String> authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+            );
+            if (authentication.isAuthenticated()) {
+                return ResponseEntity.ok(jwtService.generateAccessToken(authRequest.getUsername()));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid user request!");
+            }
+        } catch (AuthenticationException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
         }
     }
 }

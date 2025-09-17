@@ -46,4 +46,3 @@ A Spring Boot microservice for managing inventory with secure, role-based access
 - Demonstrate stock alert and reorder level notifications.
 - Highlight secure access with JWT and roles.
 
----
